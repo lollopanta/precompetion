@@ -4,13 +4,20 @@ This module sets up the FastAPI application and includes all routes.
 """
 
 import logging
-from datetime import datetime
-from typing import Dict
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Optional, Union
 
-from fastapi import FastAPI
+import numpy as np
+import rasterio
+import xarray as xr
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+from rasterio.transform import from_bounds
 
 from backend.api.routes import router as api_router
+from backend.models.inference.bloom_predictor import BloomPredictor, load_predictor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
