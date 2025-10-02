@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloomTrack - Global Plant Bloom Detection & Prediction</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">BloomTrack</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">API</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar">
+                <div class="p-3">
+                    <h4>Bloom Prediction</h4>
+                    <form id="prediction-form">
+                        <div class="mb-3">
+                            <label for="date-picker" class="form-label">Date</label>
+                            <input type="text" class="form-control" id="date-picker" placeholder="Select date">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Location</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">Lat</span>
+                                <input type="number" class="form-control" id="latitude" step="0.000001" placeholder="Latitude">
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text">Lon</span>
+                                <input type="number" class="form-control" id="longitude" step="0.000001" placeholder="Longitude">
+                            </div>
+                            <div class="form-text">Click on the map to set coordinates</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="include-forecast">
+                                <label class="form-check-label" for="include-forecast">
+                                    Include forecast
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3" id="forecast-days-container" style="display: none;">
+                            <label for="forecast-days" class="form-label">Forecast days</label>
+                            <input type="range" class="form-range" id="forecast-days" min="7" max="90" value="30">
+                            <div class="d-flex justify-content-between">
+                                <small>7 days</small>
+                                <small id="forecast-days-value">30 days</small>
+                                <small>90 days</small>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Get Prediction</button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div id="prediction-results" style="display: none;">
+                        <h5>Prediction Results</h5>
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">Bloom Status</h6>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div id="bloom-status-indicator" class="bloom-indicator"></div>
+                                    <div id="bloom-status-text">Not blooming</div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="d-flex justify-content-between">
+                                        <small>Probability:</small>
+                                        <small id="bloom-probability">0%</small>
+                                    </div>
+                                    <div class="progress">
+                                        <div id="bloom-probability-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="d-flex justify-content-between">
+                                        <small>Intensity:</small>
+                                        <small id="bloom-intensity">0/10</small>
+                                    </div>
+                                    <div class="progress">
+                                        <div id="bloom-intensity-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="forecast-container" style="display: none;">
+                            <h6>Bloom Forecast</h6>
+                            <div id="forecast-chart" style="height: 200px;"></div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <h6>Environmental Features</h6>
+                            <div id="environmental-features">
+                                <!-- Features will be added dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Map -->
+            <div class="col-md-9 map-container">
+                <div id="map"></div>
+                
+                <div class="map-controls">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>Map Layers</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="bloom-layer" checked>
+                                <label class="form-check-label" for="bloom-layer">
+                                    Bloom Probability
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="satellite-layer">
+                                <label class="form-check-label" for="satellite-layer">
+                                    Satellite Imagery
+                                </label>
+                            </div>
+                            
+                            <hr>
+                            
+                            <h6>Time Control</h6>
+                            <div class="d-flex align-items-center">
+                                <button id="play-button" class="btn btn-sm btn-outline-secondary me-2">
+                                    <i class="bi bi-play-fill"></i>
+                                </button>
+                                <input type="range" class="form-range" id="time-slider" min="0" max="100" value="100">
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small id="time-start">Jan 2023</small>
+                                <small id="time-current">Dec 2023</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/map.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

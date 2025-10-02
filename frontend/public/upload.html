@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloomTrack - Upload File</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/upload.css">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <h1>BloomTrack</h1>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Mappa</a></li>
+                    <li><a href="upload.html" class="active">Upload Dati</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="upload-container">
+            <div class="upload-header">
+                <h2>Upload Dati</h2>
+                <p>Carica i tuoi file di dati per l'analisi e la visualizzazione</p>
+            </div>
+
+            <form id="upload-form" class="upload-form">
+                <div class="form-group">
+                    <label for="file-input">Seleziona File</label>
+                    <input type="file" id="file-input" name="file" required>
+                </div>
+                <div class="form-group">
+                    <label for="description-input">Descrizione (opzionale)</label>
+                    <textarea id="description-input" placeholder="Inserisci una descrizione per il file..."></textarea>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="skip-validation" name="skip-validation">
+                    <label for="skip-validation">Salta validazione</label>
+                </div>
+                <button type="submit" class="upload-btn">Carica File</button>
+            </form>
+
+            <div id="upload-status" class="status" style="display: none;"></div>
+
+            <div class="main-content">
+                <div class="files-container">
+                    <div class="files-header">
+                        <h3>File Caricati</h3>
+                        <button id="refresh-btn" class="refresh-btn">Aggiorna</button>
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <select id="file-type-filter">
+                            <option value="">Tutti i tipi di file</option>
+                            <option value="csv">CSV</option>
+                            <option value="json">JSON</option>
+                            <option value="geojson">GeoJSON</option>
+                            <option value="tif">TIFF</option>
+                            <option value="jpg">JPEG</option>
+                            <option value="png">PNG</option>
+                            <option value="txt">TXT</option>
+                            <option value="xlsx">Excel</option>
+                        </select>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="valid-only-filter">
+                            <label for="valid-only-filter">Solo file validi</label>
+                        </div>
+                    </div>
+                    
+                    <div id="files-list" class="files-list">
+                        <p>Caricamento file...</p>
+                    </div>
+                </div>
+                
+                <div class="file-preview-container">
+                    <h2>Anteprima File</h2>
+                    <div id="file-preview">
+                        <p>Seleziona un file per visualizzare l'anteprima</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading-indicator" class="loading-indicator">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2023 BloomTrack - Sistema di Rilevamento e Previsione Fioritura Globale</p>
+    </footer>
+
+    <script src="js/upload.js"></script>
+    <script>
+        // Aggiungi event listener per il pulsante di aggiornamento
+        document.getElementById('refresh-btn').addEventListener('click', () => {
+            const uploader = new FileUploader();
+            const filesList = document.getElementById('files-list');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            
+            // Mostra l'indicatore di caricamento
+            loadingIndicator.style.display = 'block';
+            filesList.innerHTML = '<p>Aggiornamento lista...</p>';
+            
+            // Carica la lista dei file
+            uploader.getFilesList()
+                .then(data => {
+                    filesList.innerHTML = '';
+                    
+                    if (data.files.length === 0) {
+                        filesList.innerHTML = '<p>Nessun file caricato</p>';
+                        return;
+                    }
+                    
+                    // Funzione per formattare la dimensione del file
+                    function formatFileSize(bytes) {
+                        if (bytes < 1024) return bytes + ' B';
+                        else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+                        else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + ' MB';
+                        else return (bytes / 1073741824).toFixed(1) + ' GB';
+                    }
+                    
+                    // Crea la lista dei file
+                    data.files.forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.className = 'file-item';
+                        
+                        const sizeStr = formatFileSize(file.size);
+                        
+                        fileItem.innerHTML = `
+                            <div class="file-info">
+                                <span class="file-name">${file.filename}</span>
+                                <span class="file-size">${sizeStr}</span>
+                                <span class="file-type">${file.content_type}</span>
+                            </div>
+                            <div class="file-actions">
+                                <button class="delete-btn" data-filename="${file.filename}">Elimina</button>
+                            </div>
+                        `;
+                        
+                        filesList.appendChild(fileItem);
+                        
+                        // Aggiungi event listener per il pulsante di eliminazione
+                        const deleteBtn = fileItem.querySelector('.delete-btn');
+                        deleteBtn.addEventListener('click', () => {
+                            if (confirm('Sei sicuro di voler eliminare questo file?')) {
+                                loadingIndicator.style.display = 'block';
+                                uploader.deleteFile(file.filename)
+                                    .then(() => {
+                                        document.getElementById('upload-status').textContent = 'File eliminato con successo';
+                                        document.getElementById('upload-status').className = 'status success';
+                                        document.getElementById('upload-status').style.display = 'block';
+                                        
+                                        // Ricarica la lista
+                                        document.getElementById('refresh-btn').click();
+                                        
+                                        // Nascondi lo stato dopo 5 secondi
+                                        setTimeout(() => {
+                                            document.getElementById('upload-status').style.display = 'none';
+                                        }, 5000);
+                                    })
+                                    .catch(error => {
+                                        document.getElementById('upload-status').textContent = `Errore nell'eliminazione: ${error.message}`;
+                                        document.getElementById('upload-status').className = 'status error';
+                                        document.getElementById('upload-status').style.display = 'block';
+                                        loadingIndicator.style.display = 'none';
+                                    });
+                            }
+                        });
+                    });
+                })
+                .catch(error => {
+                    filesList.innerHTML = `<p class="error">Errore nel caricamento della lista: ${error.message}</p>`;
+                })
+                .finally(() => {
+                    loadingIndicator.style.display = 'none';
+                });
+        });
+    </script>
+</body>
+</html>

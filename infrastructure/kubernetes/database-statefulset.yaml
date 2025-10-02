@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: bloomtrack-db
+  labels:
+    app: bloomtrack
+    tier: database
+spec:
+  serviceName: "bloomtrack-db"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bloomtrack
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: bloomtrack
+        tier: database
+    spec:
+      containers:
+      - name: postgres
+        image: postgis/postgis:14-3.2
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: bloomtrack-secrets
+              key: postgres-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bloomtrack-secrets
+              key: postgres-password
+        - name: POSTGRES_DB
+          value: bloomtrack
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+          limits:
+            cpu: "1000m"
+            memory: "2Gi"
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "postgres"]
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command: ["pg_isready", "-U", "postgres"]
+          initialDelaySeconds: 30
+          periodSeconds: 20
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bloomtrack-db
+  labels:
+    app: bloomtrack
+    tier: database
+spec:
+  selector:
+    app: bloomtrack
+    tier: database
+  ports:
+  - port: 5432
+    targetPort: 5432
+  clusterIP: None

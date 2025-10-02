@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - backend-deployment.yaml
+  - frontend-deployment.yaml
+  - database-statefulset.yaml
+  - redis-deployment.yaml
+  - ingress.yaml
+  - configmap.yaml
+  # Secrets should be managed separately in production
+  # - secrets.yaml
+
+namespace: bloomtrack
+
+commonLabels:
+  app: bloomtrack
+  environment: production
+
+images:
+  - name: bloomtrack/backend
+    newTag: latest
+  - name: bloomtrack/frontend
+    newTag: latest

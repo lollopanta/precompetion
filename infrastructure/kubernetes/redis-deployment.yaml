@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bloomtrack-redis
+  labels:
+    app: bloomtrack
+    tier: cache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bloomtrack
+      tier: cache
+  template:
+    metadata:
+      labels:
+        app: bloomtrack
+        tier: cache
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bloomtrack-redis
+  labels:
+    app: bloomtrack
+    tier: cache
+spec:
+  selector:
+    app: bloomtrack
+    tier: cache
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP

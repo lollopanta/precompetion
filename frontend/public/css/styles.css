@@ -1,0 +1,170 @@
+/* BloomTrack CSS Styles */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container-fluid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    flex: 1;
+}
+
+/* Map Styles */
+.map-container {
+    position: relative;
+    height: calc(100vh - 56px);
+}
+
+#map {
+    height: 100%;
+    width: 100%;
+    z-index: 1;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+/* Map Controls */
+.map-controls {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    width: 250px;
+}
+
+/* Bloom Indicator */
+.bloom-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #dc3545;
+}
+
+.bloom-indicator.blooming {
+    background-color: #28a745;
+}
+
+/* Legend */
+.map-legend {
+    position: absolute;
+    bottom: 30px;
+    right: 10px;
+    background: white;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.legend-gradient {
+    height: 20px;
+    width: 200px;
+    background: linear-gradient(to right, #313695, #4575b4, #74add1, #abd9e9, #e0f3f8, #ffffbf, #fee090, #fdae61, #f46d43, #d73027, #a50026);
+    margin-bottom: 5px;
+}
+
+.legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+}
+
+/* Popup Styles */
+.leaflet-popup-content {
+    width: 250px !important;
+}
+
+.popup-content h5 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.popup-content .progress {
+    height: 10px;
+    margin-bottom: 15px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        height: auto;
+        max-height: 50vh;
+    }
+    
+    .map-container {
+        height: 50vh;
+    }
+    
+    .map-controls {
+        width: 200px;
+    }
+}
+
+/* Chart styles */
+#forecast-chart {
+    background-color: white;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+/* Feature cards */
+.feature-card {
+    margin-bottom: 10px;
+    border-left: 4px solid #007bff;
+}
+
+.feature-card .card-body {
+    padding: 10px;
+}
+
+.feature-card .feature-value {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.feature-card .feature-name {
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+/* Time slider */
+#time-slider {
+    margin: 0 10px;
+}
+
+/* Loading indicator */
+.loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+    text-align: center;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
